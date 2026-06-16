@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String?
+  role          String   @default("ADMIN") // ADMIN | STAFF
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Client {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  email       String?
+  phone       String?
+  bio         String?
+  logoUrl     String?
+  socialUrl   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  designs     ShirtDesign[]
+}
+
+model ShirtDesign {
+  id              String         @id @default(cuid())
+  slug            String         @unique
+  title           String
+  description     String?
+  artworkUrl      String         // uploaded artwork / mockup
+  mockupUrl       String?        // optional secondary mockup
+  basePrice       Float          // price per shirt in USD
+  shirtType       String         @default("Unisex Tee")
+  orderDeadline   DateTime?
+  pickupAddress   String?
+  shippingEnabled Boolean        @default(true)
+  pickupEnabled   Boolean        @default(true)
+  manualPayEnabled Boolean       @default(true)
+  stripeEnabled   Boolean        @default(true)
+  publiclyOrderable Boolean      @default(true)
+  paletteJson     String?        // JSON-encoded palette swatches
+  colorImagesJson String?        // JSON map of { colorName: imageUrl } for per-color artwork
+  clientId        String?
+  client          Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  variants        ShirtVariant[]
+  orders          Order[]
+  flyer           Flyer?
+  qrCode          QRCode?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model ShirtVariant {
+  id          String      @id @default(cuid())
+  designId    String
+  design      ShirtDesign @relation(fields: [designId], references: [id], onDelete: Cascade)
+  size        String      // XS, S, M, L, XL, 2XL, 3XL
+  color       String      // Black, White, Sand, etc.
+  colorHex    String?     // optional swatch hex
+  priceDelta  Float       @default(0) // e.g. +$3 for 2XL
+  stock       Int?        // null = unlimited
+  active      Boolean     @default(true)
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  designId        String
+  design          ShirtDesign @relation(fields: [designId], references: [id])
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  fulfillment     String      // PICKUP | SHIPPING
+  shippingAddress String?
+  notes           String?
+  status          String      @default("PENDING") // PENDING | PAID | INVOICED | FULFILLED | CANCELED
+  paymentMethod   String      @default("STRIPE")  // STRIPE | MANUAL
+  paymentStatus   String      @default("UNPAID")  // UNPAID | PAID | REFUNDED
+  stripeSessionId String?
+  subtotal        Float
+  shippingCost    Float       @default(0)
+  total           Float
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String       @id @default(cuid())
+  orderId     String
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId   String
+  variant     ShirtVariant @relation(fields: [variantId], references: [id])
+  quantity    Int
+  unitPrice   Float
+}
+
+model CustomRequest {
+  id            String   @id @default(cuid())
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  shirtType     String?
+  quantityRange String?  // "1-9" | "10-24" | "25-49" | "50+"
+  deadline      DateTime?
+  description   String
+  uploadUrl     String?  // uploaded artwork / inspiration
+  needsDesign   Boolean  @default(true)
+  status        String   @default("NEW") // NEW | REVIEWING | QUOTED | ACCEPTED | DECLINED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Flyer {
+  id         String      @id @default(cuid())
+  designId   String      @unique
+  design     ShirtDesign @relation(fields: [designId], references: [id], onDelete: Cascade)
+  url        String      // /uploads/flyers/<id>.png
+  format     String      @default("PNG")
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model QRCode {
+  id         String      @id @default(cuid())
+  designId   String      @unique
+  design     ShirtDesign @relation(fields: [designId], references: [id], onDelete: Cascade)
+  targetUrl  String
+  url        String      // /uploads/qr/<id>.png
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model PricingItem {
+  id          String   @id @default(cuid())
+  key         String   @unique  // basic_shirt, design_setup, full_custom_design, ...
+  category    String              // single | bulk | design | extra | package
+  title       String
+  description String?
+  priceLabel  String              // "Starting at $25", "$25–$75", etc.
+  priceCents  Int                 // canonical numeric value (lowest in range)
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+}

@@ -1,0 +1,18 @@
+// Drop-in replacement for prisma/schema.prisma when deploying to Neon Postgres.
+// Swap the datasource block in schema.prisma to this one (or replace the whole
+// file) before running `prisma migrate deploy` against Neon.
+//
+// Model definitions are identical — only the datasource provider differs.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Neon supports the pooled URL via PgBouncer + a direct URL for migrations:
+  // directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ... (keep the rest of the models from schema.prisma below this line)

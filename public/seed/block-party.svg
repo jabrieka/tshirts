@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <radialGradient id="g1" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#FF1F6D"/>
+      <stop offset="60%" stop-color="#3B1FFF"/>
+      <stop offset="100%" stop-color="#0B0B12"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#g1)"/>
+  <circle cx="300" cy="300" r="170" fill="#FFD23F"/>
+  <text x="300" y="290" text-anchor="middle" font-family="Impact, sans-serif" font-size="76" fill="#0B0B12">BLOCK</text>
+  <text x="300" y="360" text-anchor="middle" font-family="Impact, sans-serif" font-size="76" fill="#0B0B12">PARTY</text>
+  <text x="300" y="420" text-anchor="middle" font-family="Impact, sans-serif" font-size="34" fill="#FF1F6D">'24</text>
+</svg>
