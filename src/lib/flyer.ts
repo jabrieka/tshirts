@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import QRCode from "qrcode";
 import type { Palette } from "./palette";
+import { renderSvgToPng } from "./render-svg";
 
 type FlyerInput = {
   title: string;
@@ -63,8 +64,8 @@ export async function buildFlyerSvg(input: FlyerInput): Promise<string> {
   </g>
 
   <rect x="0" y="0" width="${W}" height="80" fill="${palette.background}"/>
-  <text x="48" y="54" font-family="Impact, 'Arial Black', sans-serif" font-size="34" fill="${palette.secondary}" letter-spacing="2">COSETTE PRODUCTIONS</text>
-  <text x="${W - 48}" y="54" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="${palette.text}">CUSTOM TEES · CULTURE · COMMUNITY</text>
+  <text x="48" y="54" font-family="Anton, sans-serif" font-size="34" fill="${palette.secondary}" letter-spacing="2">COSETTE PRODUCTIONS</text>
+  <text x="${W - 48}" y="54" text-anchor="end" font-family="Inter, sans-serif" font-size="24" fill="${palette.text}">CUSTOM TEES · CULTURE · COMMUNITY</text>
 
   <g transform="translate(120, 160)">
     <rect x="-12" y="-12" width="864" height="864" fill="${palette.background}" opacity="0.92" rx="32"/>
@@ -73,11 +74,11 @@ export async function buildFlyerSvg(input: FlyerInput): Promise<string> {
   </g>
 
   <g transform="translate(80, 1060)">
-    ${clientName ? `<text x="0" y="0" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="${palette.secondary}" letter-spacing="6">${escapeXml(clientName.toUpperCase())} · PRESENTS</text>` : ""}
-    <text x="0" y="80" font-family="Impact, 'Arial Black', sans-serif" font-size="${titleSize(title)}" fill="${palette.text}">${escapeXml(title.toUpperCase())}</text>
+    ${clientName ? `<text x="0" y="0" font-family="Inter, sans-serif" font-size="28" fill="${palette.secondary}" letter-spacing="6">${escapeXml(clientName.toUpperCase())} · PRESENTS</text>` : ""}
+    <text x="0" y="80" font-family="Anton, sans-serif" font-size="${titleSize(title)}" fill="${palette.text}">${escapeXml(title.toUpperCase())}</text>
   </g>
 
-  <g transform="translate(80, 1230)" font-family="Helvetica, Arial, sans-serif">
+  <g transform="translate(80, 1230)" font-family="Inter, sans-serif">
     <g>
       <rect x="0" y="0" width="280" height="86" rx="20" fill="${palette.secondary}"/>
       <text x="22" y="36" font-size="18" fill="${palette.background}" letter-spacing="3">STARTING AT</text>
@@ -91,8 +92,8 @@ export async function buildFlyerSvg(input: FlyerInput): Promise<string> {
   </g>
 
   <g transform="translate(80, 1370)">
-    <text x="0" y="0" font-family="Impact, sans-serif" font-size="40" fill="${palette.text}">SCAN TO ORDER →</text>
-    <text x="0" y="46" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="${palette.text}" opacity="0.85">cosetteproductions.com</text>
+    <text x="0" y="0" font-family="Anton, sans-serif" font-size="40" fill="${palette.text}">SCAN TO ORDER →</text>
+    <text x="0" y="46" font-family="Inter, sans-serif" font-size="22" fill="${palette.text}" opacity="0.85">cosetteproductions.com</text>
   </g>
 
   <g transform="translate(${W - 380}, 1290)">
@@ -103,14 +104,13 @@ export async function buildFlyerSvg(input: FlyerInput): Promise<string> {
   <rect width="100%" height="100%" filter="url(#grain)" opacity="0.4"/>
 
   <rect x="0" y="${H - 56}" width="${W}" height="56" fill="${palette.background}"/>
-  <text x="${W / 2}" y="${H - 20}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="${palette.secondary}" letter-spacing="6">DESIGNED · PRINTED · PROMOTED BY COSETTE PRODUCTIONS</text>
+  <text x="${W / 2}" y="${H - 20}" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="${palette.secondary}" letter-spacing="6">DESIGNED · PRINTED · PROMOTED BY COSETTE PRODUCTIONS</text>
 </svg>`;
 }
 
 export async function renderFlyerPng(input: FlyerInput): Promise<Buffer> {
-  const sharp = (await import("sharp")).default;
   const svg = await buildFlyerSvg(input);
-  return sharp(Buffer.from(svg)).png({ quality: 92 }).toBuffer();
+  return renderSvgToPng(svg);
 }
 
 function titleSize(t: string): number {

@@ -48,6 +48,17 @@ export default function EditDesignForm({
   const [colorImages, setColorImages] = useState<Record<string, string>>(initialColorImages);
   const [busyColor, setBusyColor] = useState<string | null>(null);
 
+  const ALL_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
+  const [vSizes, setVSizes] = useState<string[]>(
+    Array.from(new Set(variants.filter((v) => v.active).map((v) => v.size)))
+  );
+  const [vColors, setVColors] = useState<{ name: string; hex: string }[]>(
+    colors.map((c) => ({ name: c.name, hex: c.hex ?? "#000000" }))
+  );
+  const [newVColor, setNewVColor] = useState({ name: "", hex: "#000000" });
+  const [savingVariants, setSavingVariants] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+
   async function postColorImages(fd: FormData, color: string) {
     setBusyColor(color);
     setErr(null);
@@ -79,6 +90,48 @@ export default function EditDesignForm({
     const fd = new FormData();
     fd.set("remove", color);
     return postColorImages(fd, color);
+  }
+
+  async function saveVariants() {
+    setSavingVariants(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      const res = await fetch(`/api/designs/${design.id}/variants`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sizes: vSizes, colors: vColors }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error ?? "Failed to save variants.");
+      window.location.reload();
+    } catch (e: any) {
+      setErr(e.message);
+      setSavingVariants(false);
+    }
+  }
+
+  async function changePrimaryPhoto(file: File) {
+    setPhotoBusy(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      const url = await uploadToBlob(file, "designs");
+      if (!url) throw new Error("Image upload needs Blob storage (available in production).");
+      const res = await fetch(`/api/designs/${design.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...d, orderDeadline: d.orderDeadline || null, artworkUrl: url }),
+      });
+      if (!res.ok) {
+        const j = await res.json();
+        throw new Error(j.error ?? "Failed to update photo.");
+      }
+      window.location.reload();
+    } catch (e: any) {
+      setErr(e.message);
+      setPhotoBusy(false);
+    }
   }
 
   async function onSave(e: React.FormEvent) {
@@ -158,19 +211,73 @@ export default function EditDesignForm({
       </div>
 
       <div>
-        <div className="label">VARIANTS ({variants.length})</div>
-        <div className="grid md:grid-cols-2 gap-2 mt-2 text-sm">
-          {variants.map((v) => (
-            <div key={v.id} className="flex items-center justify-between border border-white/10 rounded-lg px-3 py-2">
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-3 h-3 rounded-full" style={{ background: v.colorHex ?? "#888" }} />
-                <span>{v.size} · {v.color}</span>
-              </div>
-              <span className="text-cream/70">+${v.priceDelta.toFixed(2)}</span>
+        <div className="label">PRIMARY PHOTO</div>
+        <div className="text-xs text-cream/60 mt-1">Replacing the artwork re-themes the palette, flyer, and QR.</div>
+        <div className="flex items-center gap-3 mt-2">
+          <input
+            type="file"
+            accept="image/*"
+            className="input flex-1"
+            disabled={photoBusy}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) changePrimaryPhoto(f);
+              e.target.value = "";
+            }}
+          />
+          {photoBusy && <span className="text-xs text-cream/60">Uploading…</span>}
+        </div>
+      </div>
+
+      <div>
+        <div className="label">SIZES</div>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {ALL_SIZES.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setVSizes((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]))}
+              className={`px-3 py-1 rounded-full border-2 font-display tracking-widest ${vSizes.includes(s) ? "bg-sun text-ink border-ink" : "border-white/30 text-cream"}`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="label">COLORS</div>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {vColors.map((c, i) => (
+            <div key={i} className="flex items-center gap-2 px-3 py-1 border-2 border-white/20 rounded-full">
+              <span className="inline-block w-4 h-4 rounded-full" style={{ background: c.hex }} />
+              <span>{c.name}</span>
+              <button type="button" className="text-flame" onClick={() => setVColors(vColors.filter((_, idx) => idx !== i))}>×</button>
             </div>
           ))}
         </div>
-        <div className="text-xs text-cream/60 mt-2">Variant editing UI can be expanded — variants are also auto-created from the New Design form.</div>
+        <div className="flex gap-2 mt-3">
+          <input placeholder="Color name" className="input" value={newVColor.name} onChange={(e) => setNewVColor({ ...newVColor, name: e.target.value })} />
+          <input type="color" className="h-12 w-14 rounded" value={newVColor.hex} onChange={(e) => setNewVColor({ ...newVColor, hex: e.target.value })} />
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              if (!newVColor.name) return;
+              if (vColors.some((c) => c.name.toLowerCase() === newVColor.name.toLowerCase())) return;
+              setVColors([...vColors, newVColor]);
+              setNewVColor({ name: "", hex: "#000000" });
+            }}
+          >
+            ADD
+          </button>
+        </div>
+        <div className="text-xs text-cream/60 mt-2">
+          {variants.length} variant{variants.length === 1 ? "" : "s"} now. Saving creates every size × color combo; removed combos with existing orders are deactivated (not deleted) to keep order history.
+        </div>
+        <button type="button" onClick={saveVariants} disabled={savingVariants} className="btn-ghost mt-3">
+          {savingVariants ? "SAVING…" : "SAVE SIZES & COLORS"}
+        </button>
       </div>
 
       <div>

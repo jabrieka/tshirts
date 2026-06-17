@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { safeParsePalette, type Palette } from "@/lib/palette";
+import { renderSvgToPng } from "@/lib/render-svg";
 
 /**
  * Auto-themed wide email banner (1200×600) for the campaign — drop into Mailchimp,
@@ -10,9 +11,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const design = await prisma.shirtDesign.findUnique({ where: { id }, include: { client: true } });
   if (!design) return new Response("Not found", { status: 404 });
   const palette = safeParsePalette(design.paletteJson);
-  const sharp = (await import("sharp")).default;
   const svg = buildEmailSvg(design.title, design.client?.name ?? null, design.basePrice, palette);
-  const png = await sharp(Buffer.from(svg)).png().toBuffer();
+  const png = renderSvgToPng(svg);
   return new Response(png as any, {
     headers: {
       "Content-Type": "image/png",
@@ -34,13 +34,13 @@ function buildEmailSvg(title: string, client: string | null, price: number, p: P
   </defs>
   <rect width="100%" height="100%" fill="url(#g)"/>
   <rect x="${W-260}" y="0" width="260" height="${H}" fill="${p.background}"/>
-  <text x="60" y="120" font-family="Helvetica, sans-serif" font-size="22" letter-spacing="8" fill="${p.secondary}">${escape((client ?? "COSETTE").toUpperCase())} · NEW DROP</text>
-  <text x="60" y="290" font-family="Impact, sans-serif" font-size="130" fill="${p.text}">${escape(title.toUpperCase())}</text>
-  <text x="60" y="370" font-family="Helvetica, sans-serif" font-size="28" fill="${p.text}" opacity="0.9">Auto-themed by the artwork. Order, share, repeat.</text>
+  <text x="60" y="120" font-family="Inter, sans-serif" font-size="22" letter-spacing="8" fill="${p.secondary}">${escape((client ?? "COSETTE").toUpperCase())} · NEW DROP</text>
+  <text x="60" y="290" font-family="Anton, sans-serif" font-size="130" fill="${p.text}">${escape(title.toUpperCase())}</text>
+  <text x="60" y="370" font-family="Inter, sans-serif" font-size="28" fill="${p.text}" opacity="0.9">Auto-themed by the artwork. Order, share, repeat.</text>
   <rect x="60" y="430" width="320" height="86" rx="20" fill="${p.secondary}"/>
-  <text x="84" y="466" font-family="Helvetica, sans-serif" font-size="18" letter-spacing="3" fill="${p.background}">STARTING AT</text>
-  <text x="84" y="504" font-family="Impact, sans-serif" font-size="40" fill="${p.background}">$${price.toFixed(0)} →</text>
-  <text x="${W-130}" y="${H/2}" text-anchor="middle" font-family="Impact, sans-serif" font-size="48" fill="${p.secondary}" transform="rotate(-90 ${W-130} ${H/2})">COSETTE PRODUCTIONS</text>
+  <text x="84" y="466" font-family="Inter, sans-serif" font-size="18" letter-spacing="3" fill="${p.background}">STARTING AT</text>
+  <text x="84" y="504" font-family="Anton, sans-serif" font-size="40" fill="${p.background}">$${price.toFixed(0)} →</text>
+  <text x="${W-130}" y="${H/2}" text-anchor="middle" font-family="Anton, sans-serif" font-size="48" fill="${p.secondary}" transform="rotate(-90 ${W-130} ${H/2})">COSETTE PRODUCTIONS</text>
 </svg>`;
 }
 function escape(s: string): string {
