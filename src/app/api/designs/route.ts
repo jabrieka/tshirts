@@ -15,18 +15,31 @@ export async function POST(req: Request) {
   const fd = await req.formData();
   const title = String(fd.get("title") ?? "").trim();
   if (!title) return NextResponse.json({ error: "Title required." }, { status: 400 });
-  const file = fd.get("artwork");
-  if (!(file instanceof File)) return NextResponse.json({ error: "Artwork required." }, { status: 400 });
 
-  const artworkUrl = await saveUploadedFile(file, "designs");
+  // Artwork arrives either as a pre-uploaded Blob URL (client upload) or as a
+  // raw file (local dev fallback). Either way we want the bytes for palette.
+  let artworkUrl: string;
+  let artworkBuf: Buffer | null = null;
+  const artworkUrlField = fd.get("artworkUrl");
+  if (typeof artworkUrlField === "string" && artworkUrlField) {
+    artworkUrl = artworkUrlField;
+    try {
+      artworkBuf = Buffer.from(await (await fetch(artworkUrl)).arrayBuffer());
+    } catch {}
+  } else {
+    const file = fd.get("artwork");
+    if (!(file instanceof File)) return NextResponse.json({ error: "Artwork required." }, { status: 400 });
+    artworkUrl = await saveUploadedFile(file, "designs");
+    artworkBuf = Buffer.from(await file.arrayBuffer());
+  }
 
   // Palette
   let paletteJson: string | undefined;
-  try {
-    const buf = Buffer.from(await file.arrayBuffer());
-    const palette = await extractPalette(buf);
-    paletteJson = JSON.stringify(palette);
-  } catch {}
+  if (artworkBuf) {
+    try {
+      paletteJson = JSON.stringify(await extractPalette(artworkBuf));
+    } catch {}
+  }
 
   const baseSlug = slugify(title);
   let slug = baseSlug;
@@ -43,10 +56,11 @@ export async function POST(req: Request) {
   // `artwork` above still drives the palette / flyer / QR.
   const colorImages: Record<string, string> = {};
   for (const [field, value] of fd.entries()) {
-    if (!field.startsWith("colorImage:")) continue;
-    if (!(value instanceof File) || value.size === 0) continue;
-    const colorName = field.slice("colorImage:".length);
-    colorImages[colorName] = await saveUploadedFile(value, "designs");
+    if (field.startsWith("colorImageUrl:") && typeof value === "string" && value) {
+      colorImages[field.slice("colorImageUrl:".length)] = value;
+    } else if (field.startsWith("colorImage:") && value instanceof File && value.size > 0) {
+      colorImages[field.slice("colorImage:".length)] = await saveUploadedFile(value, "designs");
+    }
   }
   const colorImagesJson = Object.keys(colorImages).length ? JSON.stringify(colorImages) : undefined;
 

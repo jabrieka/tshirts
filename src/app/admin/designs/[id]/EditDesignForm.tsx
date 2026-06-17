@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Palette } from "@/lib/palette";
+import { uploadToBlob } from "@/lib/client-upload";
 
 type DesignFields = {
   id: string;
@@ -64,9 +65,13 @@ export default function EditDesignForm({
     }
   }
 
-  function uploadColorImage(color: string, file: File) {
+  async function uploadColorImage(color: string, file: File) {
     const fd = new FormData();
-    fd.set(`colorImage:${color}`, file);
+    // Upload directly to Blob when available (avoids the 4.5 MB function limit);
+    // otherwise send the raw file for the local filesystem fallback.
+    const url = await uploadToBlob(file, "designs");
+    if (url) fd.set(`colorImageUrl:${color}`, url);
+    else fd.set(`colorImage:${color}`, file);
     return postColorImages(fd, color);
   }
 

@@ -26,12 +26,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (color) delete map[color];
   }
 
-  // Uploads
+  // Uploads — either a pre-uploaded Blob URL (client upload) or a raw file.
   for (const [field, value] of fd.entries()) {
-    if (!field.startsWith("colorImage:")) continue;
-    if (!(value instanceof File) || value.size === 0) continue;
-    const color = field.slice("colorImage:".length);
-    map[color] = await saveUploadedFile(value, "designs");
+    if (field.startsWith("colorImageUrl:") && typeof value === "string" && value) {
+      map[field.slice("colorImageUrl:".length)] = value;
+    } else if (field.startsWith("colorImage:") && value instanceof File && value.size > 0) {
+      map[field.slice("colorImage:".length)] = await saveUploadedFile(value, "designs");
+    }
   }
 
   const colorImagesJson = Object.keys(map).length ? JSON.stringify(map) : null;

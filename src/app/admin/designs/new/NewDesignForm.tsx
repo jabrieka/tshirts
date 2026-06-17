@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { uploadToBlob } from "@/lib/client-upload";
 
 const DEFAULT_SIZES = ["S", "M", "L", "XL", "2XL"];
 const DEFAULT_COLORS = [
@@ -24,9 +25,25 @@ export default function NewDesignForm({ clients }: { clients: { id: string; name
       const fd = new FormData(e.currentTarget);
       fd.set("sizes", JSON.stringify(sizes));
       fd.set("colors", JSON.stringify(colors));
-      for (const [name, file] of Object.entries(colorFiles)) {
-        if (colors.some((c) => c.name === name)) fd.set(`colorImage:${name}`, file);
+
+      // Upload the main artwork directly to Blob when possible; fall back to
+      // sending the raw file in the form (local dev without Blob).
+      const artwork = fd.get("artwork");
+      if (artwork instanceof File && artwork.size > 0) {
+        const url = await uploadToBlob(artwork, "designs");
+        if (url) {
+          fd.delete("artwork");
+          fd.set("artworkUrl", url);
+        }
       }
+
+      for (const [name, file] of Object.entries(colorFiles)) {
+        if (!colors.some((c) => c.name === name)) continue;
+        const url = await uploadToBlob(file, "designs");
+        if (url) fd.set(`colorImageUrl:${name}`, url);
+        else fd.set(`colorImage:${name}`, file);
+      }
+
       const res = await fetch("/api/designs", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to create design.");
