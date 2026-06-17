@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { saveUploadedFile } from "@/lib/upload";
+import { sendNotificationEmail, esc } from "@/lib/email";
 
 export async function POST(req: Request) {
   const fd = await req.formData();
@@ -22,5 +23,24 @@ export async function POST(req: Request) {
       needsDesign: String(fd.get("needsDesign") ?? "false") === "true",
     },
   });
+
+  await sendNotificationEmail({
+    subject: `New custom request — ${created.customerName || created.customerEmail}`,
+    replyTo: created.customerEmail || undefined,
+    html: `
+      <h2>New custom request</h2>
+      <p><strong>Name:</strong> ${esc(created.customerName)}</p>
+      <p><strong>Email:</strong> ${esc(created.customerEmail)}</p>
+      <p><strong>Phone:</strong> ${esc(created.customerPhone) || "—"}</p>
+      <p><strong>Shirt type:</strong> ${esc(created.shirtType) || "—"}</p>
+      <p><strong>Quantity:</strong> ${esc(created.quantityRange) || "—"}</p>
+      <p><strong>Deadline:</strong> ${created.deadline ? new Date(created.deadline).toLocaleDateString("en-US") : "—"}</p>
+      <p><strong>Needs design:</strong> ${created.needsDesign ? "Yes" : "No"}</p>
+      <p><strong>Description:</strong><br>${esc(created.description).replace(/\n/g, "<br>")}</p>
+      ${uploadUrl ? `<p><strong>Attachment:</strong> <a href="${esc(uploadUrl)}">${esc(uploadUrl)}</a></p>` : ""}
+      <hr><p style="color:#888">View in admin → /admin/requests</p>
+    `,
+  });
+
   return NextResponse.json({ ok: true, id: created.id });
 }

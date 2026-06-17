@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { stripe, stripeEnabled } from "@/lib/stripe";
+import { sendNotificationEmail, esc } from "@/lib/email";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -52,6 +53,34 @@ export async function POST(req: Request) {
       items: { create: orderItemsData },
     },
   });
+
+  // Notify the studio of the new order.
+  {
+    const vmap = Object.fromEntries(design.variants.map((v) => [v.id, v]));
+    const itemLines = orderItemsData
+      .map((oi) => {
+        const v = vmap[oi.variantId];
+        return `${oi.quantity} × ${esc(design.title)} — ${esc(v.size)}/${esc(v.color)} @ $${oi.unitPrice.toFixed(2)}`;
+      })
+      .join("<br>");
+    await sendNotificationEmail({
+      subject: `New order — ${order.customerName} ($${total.toFixed(2)}, ${paymentMethod})`,
+      replyTo: order.customerEmail || undefined,
+      html: `
+        <h2>New order</h2>
+        <p><strong>Customer:</strong> ${esc(order.customerName)} (${esc(order.customerEmail)})</p>
+        <p><strong>Phone:</strong> ${esc(order.customerPhone) || "—"}</p>
+        <p><strong>Fulfillment:</strong> ${esc(fulfillment)}${order.shippingAddress ? ` — ${esc(order.shippingAddress)}` : ""}</p>
+        <p><strong>Payment:</strong> ${esc(paymentMethod)} · ${paymentMethod === "MANUAL" ? "awaiting manual payment" : "awaiting Stripe payment"}</p>
+        <p><strong>Items:</strong><br>${itemLines}</p>
+        <p><strong>Subtotal:</strong> $${subtotal.toFixed(2)}<br>
+           <strong>Shipping:</strong> $${shippingCost.toFixed(2)}<br>
+           <strong>Total:</strong> $${total.toFixed(2)}</p>
+        ${order.notes ? `<p><strong>Notes:</strong> ${esc(order.notes)}</p>` : ""}
+        <hr><p style="color:#888">View in admin → /admin/orders</p>
+      `,
+    });
+  }
 
   // Stripe checkout
   if (paymentMethod === "STRIPE" && stripeEnabled && stripe) {
