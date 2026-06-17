@@ -72,7 +72,7 @@ function SiteFooter() {
         <div>
           <div className="section-eyebrow">Contact</div>
           <ul className="mt-3 space-y-2 text-sm">
-            <li>hello@cosetteproductions.com</li>
+            <li><a href="mailto:cosetteproductions@gmail.com" className="hover:text-sun">cosetteproductions@gmail.com</a></li>
             <li><Link href="/contact" className="hover:text-sun">FAQ + Contact Form</Link></li>
             <li className="text-cream/60">© {new Date().getFullYear()} Cosette Productions LLC</li>
           </ul>

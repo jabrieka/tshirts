@@ -43,7 +43,7 @@ export default function ContactPage() {
             specifics, or email us directly.
           </p>
           <ul className="mt-4 space-y-2">
-            <li><span className="text-sun">Email:</span> hello@cosetteproductions.com</li>
+            <li><span className="text-sun">Email:</span> <a href="mailto:cosetteproductions@gmail.com" className="hover:text-sun">cosetteproductions@gmail.com</a></li>
             <li><span className="text-sun">Studio:</span> Available by appointment</li>
             <li><span className="text-sun">Response time:</span> 1–2 business days</li>
           </ul>
