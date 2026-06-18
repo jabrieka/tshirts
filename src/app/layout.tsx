@@ -33,7 +33,8 @@ function SiteHeader() {
     <header className="sticky top-0 z-40 backdrop-blur-md bg-ink/70 border-b border-white/10">
       <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-display text-2xl tracking-wider">
-          <span className="inline-block w-3 h-3 rounded-full bg-flame shadow-glow" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/cosette-logo.png" alt="Cosette Productions logo" className="h-9 w-auto" />
           <span className="text-cream">TSHIRTS</span>
           <span className="text-cream/40">—</span>
           <span className="text-cream">COSETTE</span>
@@ -56,12 +57,24 @@ function SiteFooter() {
     <footer className="mt-24 border-t border-white/10 bg-ink/80">
       <div className="max-w-7xl mx-auto px-5 py-12 grid md:grid-cols-3 gap-8">
         <div>
-          <div className="font-display text-2xl tracking-wider">
-            <span className="text-cream">TSHIRTS</span> <span className="text-cream/40">—</span> <span className="text-cream">COSETTE</span> <span className="text-sun">PRODUCTIONS</span>
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/cosette-logo.png" alt="Cosette Productions logo" className="h-10 w-auto" />
+            <div className="font-display text-2xl tracking-wider">
+              <span className="text-cream">TSHIRTS</span> <span className="text-cream/40">—</span> <span className="text-cream">COSETTE</span> <span className="text-sun">PRODUCTIONS</span>
+            </div>
           </div>
           <p className="text-sm text-cream/70 mt-3 max-w-sm">
             Designed, printed, and promoted with culture. Tees, campaigns, and community storytelling.
           </p>
+          <a
+            href="https://cosetteproductions.com"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block mt-4 text-sm text-sun hover:text-cream font-display tracking-widest"
+          >
+            VISIT COSETTEPRODUCTIONS.COM ↗
+          </a>
         </div>
         <div>
           <div className="section-eyebrow">Studio</div>
