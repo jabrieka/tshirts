@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Cosette Productions · Custom T-Shirts, Campaigns & Culture",
+  title: "Tshirts - Cosette Productions",
   description:
     "Bold custom T-shirt design, printing, and campaign launches for artists, organizers, and community brands.",
 };
@@ -34,6 +34,8 @@ function SiteHeader() {
       <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-display text-2xl tracking-wider">
           <span className="inline-block w-3 h-3 rounded-full bg-flame shadow-glow" />
+          <span className="text-cream">TSHIRTS</span>
+          <span className="text-cream/40">—</span>
           <span className="text-cream">COSETTE</span>
           <span className="text-sun">PRODUCTIONS</span>
         </Link>
@@ -55,7 +57,7 @@ function SiteFooter() {
       <div className="max-w-7xl mx-auto px-5 py-12 grid md:grid-cols-3 gap-8">
         <div>
           <div className="font-display text-2xl tracking-wider">
-            <span className="text-cream">COSETTE</span> <span className="text-sun">PRODUCTIONS</span>
+            <span className="text-cream">TSHIRTS</span> <span className="text-cream/40">—</span> <span className="text-cream">COSETTE</span> <span className="text-sun">PRODUCTIONS</span>
           </div>
           <p className="text-sm text-cream/70 mt-3 max-w-sm">
             Designed, printed, and promoted with culture. Tees, campaigns, and community storytelling.

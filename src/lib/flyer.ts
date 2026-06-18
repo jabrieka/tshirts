@@ -93,7 +93,7 @@ export async function buildFlyerSvg(input: FlyerInput): Promise<string> {
 
   <g transform="translate(80, 1370)">
     <text x="0" y="0" font-family="Anton, sans-serif" font-size="40" fill="${palette.text}">SCAN TO ORDER →</text>
-    <text x="0" y="46" font-family="Inter, sans-serif" font-size="22" fill="${palette.text}" opacity="0.85">tshirts-cosetteproductions.com</text>
+    <text x="0" y="46" font-family="Inter, sans-serif" font-size="22" fill="${palette.text}" opacity="0.85">tshirts.cosetteproductions.com</text>
   </g>
 
   <g transform="translate(${W - 380}, 1290)">

@@ -55,7 +55,7 @@ function buildSocialSvg(design: { title: string; basePrice: number; client?: { n
     <text x="28" y="50" font-family="Inter, sans-serif" font-size="22" fill="${p.secondary}" letter-spacing="4">ORDER BY</text>
     <text x="28" y="100" font-family="Anton, sans-serif" font-size="56" fill="${p.text}">${escape(deadline.toUpperCase())}</text>
   </g>
-  <text x="${W/2}" y="${H-50}" text-anchor="middle" font-family="Inter, sans-serif" font-size="22" fill="${p.text}" letter-spacing="8">TSHIRTS-COSETTEPRODUCTIONS.COM</text>
+  <text x="${W/2}" y="${H-50}" text-anchor="middle" font-family="Inter, sans-serif" font-size="22" fill="${p.text}" letter-spacing="8">TSHIRTS.COSETTEPRODUCTIONS.COM</text>
 </svg>`;
 }
 
